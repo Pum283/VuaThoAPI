@@ -3,10 +3,16 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
 {
+    /// <summary>
+    /// Base controller dùng chung cho các API v1 của hệ thống Vua Thợ.
+    /// </summary>
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/v1/[controller]")]
     public abstract class ApiController : ControllerBase
     {
+        /// <summary>
+        /// Chuẩn hoá trả về kết quả theo <see cref="OperationResult{T}"/>.
+        /// </summary>
         protected IActionResult HandleResult<T>(OperationResult<T> result)
         {
             if (result == null) return NotFound();
@@ -20,9 +26,12 @@ namespace API.Controllers
             if (result.Errors != null && result.Errors.Any())
                 return BadRequest(result.Errors);
             
-            return BadRequest(result.Message ?? "An error occurred");
+            return BadRequest(result.Message ?? "Đã xảy ra lỗi trong quá trình xử lý yêu cầu.");
         }
 
+        /// <summary>
+        /// Chuẩn hoá trả về kết quả theo <see cref="OperationResult"/>.
+        /// </summary>
         protected IActionResult HandleResult(OperationResult result)
         {
             if (result == null) return NotFound();
@@ -33,7 +42,7 @@ namespace API.Controllers
             if (result.Errors != null && result.Errors.Any())
                 return BadRequest(result.Errors);
             
-            return BadRequest(result.Message ?? "An error occurred");
+            return BadRequest(result.Message ?? "Đã xảy ra lỗi trong quá trình xử lý yêu cầu.");
         }
     }
 }

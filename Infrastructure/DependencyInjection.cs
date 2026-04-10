@@ -1,7 +1,9 @@
 using Application.Common.Interfaces;
 using Application.Interfaces;
+using Application.Interfaces.Services;
 using Infrastructure.Common;
 using Infrastructure.Persistence;
+using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,6 +32,9 @@ namespace Infrastructure
 
             // Common Services
             services.AddScoped<IDateTimeProvider, SystemDateTimeProvider>();
+
+            // Domain Services
+            services.AddScoped<IUserService, UserService>();
 
             return services;
         }

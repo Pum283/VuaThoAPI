@@ -4,17 +4,26 @@ using System.Text.Json;
 
 namespace API.Middlewares
 {
+    /// <summary>
+    /// Middleware xử lý exception toàn cục, trả về lỗi theo JSON.
+    /// </summary>
     public class ExceptionMiddleware
     {
         private readonly RequestDelegate _next;
         private readonly ILogger<ExceptionMiddleware> _logger;
 
+        /// <summary>
+        /// Khởi tạo middleware.
+        /// </summary>
         public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
         {
             _next = next;
             _logger = logger;
         }
 
+        /// <summary>
+        /// Thực thi middleware.
+        /// </summary>
         public async Task InvokeAsync(HttpContext context)
         {
             try
@@ -46,7 +55,7 @@ namespace API.Middlewares
             }
             else
             {
-                result = JsonSerializer.Serialize(new { error = "An error occurred while processing your request." });
+                result = JsonSerializer.Serialize(new { error = "Đã xảy ra lỗi trong quá trình xử lý yêu cầu." });
             }
 
             context.Response.ContentType = "application/json";
@@ -56,8 +65,14 @@ namespace API.Middlewares
         }
     }
 
+    /// <summary>
+    /// Extensions để đăng ký middleware xử lý exception.
+    /// </summary>
     public static class ExceptionMiddlewareExtensions
     {
+        /// <summary>
+        /// Đăng ký middleware xử lý exception toàn cục.
+        /// </summary>
         public static IApplicationBuilder UseExceptionMiddleware(this IApplicationBuilder builder)
         {
             return builder.UseMiddleware<ExceptionMiddleware>();

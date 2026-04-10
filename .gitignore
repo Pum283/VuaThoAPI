@@ -353,6 +353,10 @@ ASALocalRun/
 # BeatPulse healthcheck temp database
 healthchecksdb
 
+# Environment files (secrets)
+API/.env
+API/.env.*
+
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 MigrationBackup/
 

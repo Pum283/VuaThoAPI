@@ -1,0 +1,34 @@
+namespace Application.DTOs.Auth
+{
+    /// <summary>
+    /// Đăng ký tài khoản khách hàng.
+    /// </summary>
+    public class RegisterCustomerRequest
+    {
+        /// <summary>
+        /// Token xác thực OTP (nhận được sau bước verify OTP).
+        /// </summary>
+        public string OtpVerificationToken { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Số điện thoại (đã xác thực OTP).
+        /// </summary>
+        public string PhoneNumber { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Email (không bắt buộc).
+        /// </summary>
+        public string? Email { get; set; }
+
+        /// <summary>
+        /// Mật khẩu.
+        /// </summary>
+        public string Password { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Họ và tên hiển thị.
+        /// </summary>
+        public string FullName { get; set; } = string.Empty;
+    }
+}
+

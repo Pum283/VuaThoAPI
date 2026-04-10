@@ -1,14 +1,26 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Domain.Common;
+using Domain.Entity;
 using System.Reflection;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence
 {
-    public class AppDbContext : DbContext
+    public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
         }
+
+        public DbSet<WorkerProfile> WorkerProfiles => Set<WorkerProfile>();
+        public DbSet<Category> Categories => Set<Category>();
+        public DbSet<WorkerCategory> WorkerCategories => Set<WorkerCategory>();
+        public DbSet<Booking> Bookings => Set<Booking>();
+        public DbSet<Payment> Payments => Set<Payment>();
+        public DbSet<Review> Reviews => Set<Review>();
+        public DbSet<OtpCode> OtpCodes => Set<OtpCode>();
+        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

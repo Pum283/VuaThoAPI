@@ -1,4 +1,5 @@
 using Application.Common.Interfaces;
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
@@ -10,6 +11,9 @@ namespace Application
         {
             // Đăng ký các services từ Assembly
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
+
+            // FluentValidation
+            services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
             
             // Có thể thêm MediatR ở đây nếu cần
             // services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));

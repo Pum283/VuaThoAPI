@@ -8,6 +8,7 @@ using Infrastructure.Persistence;
 using Infrastructure.Security;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace Infrastructure.Services.Auth
 {
@@ -22,19 +23,22 @@ namespace Infrastructure.Services.Auth
         private readonly RoleManager<IdentityRole<int>> _roleManager;
         private readonly IJwtTokenService _jwtTokenService;
         private readonly IEmailService _emailService;
+        private readonly IWorkerRegistrationFileStorage _workerRegistrationFileStorage;
 
         public AuthService(
             AppDbContext context,
             UserManager<User> userManager,
             RoleManager<IdentityRole<int>> roleManager,
             IEmailService emailService,
-            IJwtTokenService jwtTokenService)
+            IJwtTokenService jwtTokenService,
+            IWorkerRegistrationFileStorage workerRegistrationFileStorage)
         {
             _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
             _emailService = emailService;
             _jwtTokenService = jwtTokenService;
+            _workerRegistrationFileStorage = workerRegistrationFileStorage;
         }
 
         public async Task<OperationResult> SendOtpAsync(SendOtpRequest request, CancellationToken cancellationToken = default)
@@ -160,6 +164,22 @@ namespace Infrastructure.Services.Auth
                 return OperationResult<VerifyOtpResponse>.Failure("OTP đã hết hạn. Vui lòng yêu cầu OTP mới.");
             }
 
+            if (otpEntity.IsVerified)
+            {
+                if (!string.IsNullOrWhiteSpace(otpEntity.VerificationToken) &&
+                    otpEntity.VerificationTokenExpiresAtUtc is { } tokenExp &&
+                    tokenExp > DateTime.UtcNow)
+                {
+                    return OperationResult<VerifyOtpResponse>.Success(new VerifyOtpResponse
+                    {
+                        OtpVerificationToken = otpEntity.VerificationToken,
+                        ExpiresAtUtc = tokenExp
+                    }, "OTP đã được xác thực.");
+                }
+
+                return OperationResult<VerifyOtpResponse>.Failure("OTP đã được sử dụng. Vui lòng yêu cầu mã mới.");
+            }
+
             var isValid = CryptoHelper.VerifySha256(otp, otpEntity.Salt, otpEntity.CodeHash);
             if (!isValid)
             {
@@ -194,39 +214,84 @@ namespace Infrastructure.Services.Auth
                 otpVerificationToken: request.OtpVerificationToken,
                 latitude: null,
                 longitude: null,
+                registrationFiles: null,
                 cancellationToken: cancellationToken);
         }
 
-        public Task<OperationResult<AuthResponse>> RegisterWorkerExternalAsync(RegisterWorkerExternalRequest request, CancellationToken cancellationToken = default)
+        public async Task<OperationResult<AuthResponse>> RegisterWorkerExternalAsync(
+            RegisterWorkerExternalRequest request,
+            IReadOnlyList<WorkerRegistrationFileUpload> registrationFiles,
+            CancellationToken cancellationToken = default)
         {
-            return RegisterInternalAsync(
-                roleName: RoleNames.WorkerExternal,
-                workerType: WorkerType.External,
-                workerStatus: WorkerStatus.Pending,
-                phoneNumber: request.PhoneNumber,
-                email: request.Email,
-                fullName: request.FullName,
-                password: request.Password,
-                otpVerificationToken: request.OtpVerificationToken,
-                latitude: request.Latitude,
-                longitude: request.Longitude,
-                cancellationToken: cancellationToken);
+            var files = registrationFiles ?? Array.Empty<WorkerRegistrationFileUpload>();
+            var fileList = files.ToList();
+            try
+            {
+                var docErrors = WorkerRegistrationFileRules.ValidateRequiredDocumentsForExternal(fileList);
+                if (docErrors.Count > 0)
+                {
+                    return OperationResult<AuthResponse>.Failure(docErrors.ToList());
+                }
+
+                return await RegisterInternalAsync(
+                    roleName: RoleNames.WorkerExternal,
+                    workerType: WorkerType.External,
+                    workerStatus: WorkerStatus.Pending,
+                    phoneNumber: request.PhoneNumber,
+                    email: request.Email,
+                    fullName: request.FullName,
+                    password: request.Password,
+                    otpVerificationToken: request.OtpVerificationToken,
+                    latitude: null,
+                    longitude: null,
+                    registrationFiles: fileList,
+                    cancellationToken: cancellationToken);
+            }
+            finally
+            {
+                foreach (var f in fileList)
+                {
+                    await f.Content.DisposeAsync();
+                }
+            }
         }
 
-        public Task<OperationResult<AuthResponse>> RegisterWorkerDirectAsync(RegisterWorkerDirectRequest request, CancellationToken cancellationToken = default)
+        public async Task<OperationResult<AuthResponse>> RegisterWorkerDirectAsync(
+            RegisterWorkerDirectRequest request,
+            IReadOnlyList<WorkerRegistrationFileUpload> registrationFiles,
+            CancellationToken cancellationToken = default)
         {
-            return RegisterInternalAsync(
-                roleName: RoleNames.WorkerDirect,
-                workerType: WorkerType.Direct,
-                workerStatus: WorkerStatus.Inactive,
-                phoneNumber: request.PhoneNumber,
-                email: request.Email,
-                fullName: request.FullName,
-                password: request.Password,
-                otpVerificationToken: request.OtpVerificationToken,
-                latitude: request.Latitude,
-                longitude: request.Longitude,
-                cancellationToken: cancellationToken);
+            var files = registrationFiles ?? Array.Empty<WorkerRegistrationFileUpload>();
+            var fileList = files.ToList();
+            try
+            {
+                var docErrors = WorkerRegistrationFileRules.ValidateRequiredDocumentsForDirect(fileList);
+                if (docErrors.Count > 0)
+                {
+                    return OperationResult<AuthResponse>.Failure(docErrors.ToList());
+                }
+
+                return await RegisterInternalAsync(
+                    roleName: RoleNames.WorkerDirect,
+                    workerType: WorkerType.Direct,
+                    workerStatus: WorkerStatus.Inactive,
+                    phoneNumber: request.PhoneNumber,
+                    email: request.Email,
+                    fullName: request.FullName,
+                    password: request.Password,
+                    otpVerificationToken: request.OtpVerificationToken,
+                    latitude: null,
+                    longitude: null,
+                    registrationFiles: fileList,
+                    cancellationToken: cancellationToken);
+            }
+            finally
+            {
+                foreach (var f in fileList)
+                {
+                    await f.Content.DisposeAsync();
+                }
+            }
         }
 
         public async Task<OperationResult<AuthResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
@@ -341,30 +406,46 @@ namespace Infrastructure.Services.Auth
             string otpVerificationToken,
             decimal? latitude,
             decimal? longitude,
+            IReadOnlyList<WorkerRegistrationFileUpload>? registrationFiles,
             CancellationToken cancellationToken)
         {
             var phone = phoneNumber.Trim();
+            var emailNormalized = string.IsNullOrWhiteSpace(email) ? null : email.Trim();
 
             var otpEntity = await _context.OtpCodes
-                .Where(x => x.PhoneNumber == phone && x.IsVerified && !x.IsDeleted)
+                .Where(x =>
+                    x.IsVerified &&
+                    !x.IsDeleted &&
+                    x.VerificationToken != null &&
+                    x.VerificationToken == otpVerificationToken &&
+                    x.VerificationTokenExpiresAtUtc != null &&
+                    x.VerificationTokenExpiresAtUtc > DateTime.UtcNow)
                 .OrderByDescending(x => x.Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (otpEntity == null)
             {
-                return OperationResult<AuthResponse>.Failure("Bạn cần xác thực OTP trước khi đăng ký.");
+                return OperationResult<AuthResponse>.Failure("Bạn cần xác thực OTP trước khi đăng ký, hoặc token xác thực đã hết hạn.");
             }
 
-            if (otpEntity.VerificationToken == null ||
-                otpEntity.VerificationTokenExpiresAtUtc == null ||
-                otpEntity.VerificationTokenExpiresAtUtc <= DateTime.UtcNow)
+            if (!string.IsNullOrWhiteSpace(otpEntity.Email))
             {
-                return OperationResult<AuthResponse>.Failure("Token xác thực OTP đã hết hạn. Vui lòng xác thực OTP lại.");
-            }
+                if (string.IsNullOrWhiteSpace(emailNormalized))
+                {
+                    return OperationResult<AuthResponse>.Failure("Email là bắt buộc sau khi xác thực OTP qua email.");
+                }
 
-            if (!string.Equals(otpEntity.VerificationToken, otpVerificationToken, StringComparison.Ordinal))
+                if (!string.Equals(otpEntity.Email.Trim(), emailNormalized, StringComparison.OrdinalIgnoreCase))
+                {
+                    return OperationResult<AuthResponse>.Failure("Email đăng ký phải trùng email đã xác thực OTP.");
+                }
+            }
+            else
             {
-                return OperationResult<AuthResponse>.Failure("Token xác thực OTP không hợp lệ.");
+                if (!string.Equals((otpEntity.PhoneNumber ?? string.Empty).Trim(), phone, StringComparison.Ordinal))
+                {
+                    return OperationResult<AuthResponse>.Failure("Số điện thoại đăng ký phải trùng số đã xác thực OTP.");
+                }
             }
 
             var existedPhone = await _userManager.Users.AnyAsync(x => x.PhoneNumber == phone, cancellationToken);
@@ -406,9 +487,10 @@ namespace Infrastructure.Services.Auth
                 return OperationResult<AuthResponse>.Failure(errors);
             }
 
+            WorkerProfile? createdWorkerProfile = null;
             if (workerType.HasValue && workerStatus.HasValue)
             {
-                var profile = new WorkerProfile
+                createdWorkerProfile = new WorkerProfile
                 {
                     UserId = user.Id,
                     WorkerType = workerType.Value,
@@ -419,7 +501,7 @@ namespace Infrastructure.Services.Auth
                     RatingCount = 0,
                     BasePrice = 0
                 };
-                _context.WorkerProfiles.Add(profile);
+                _context.WorkerProfiles.Add(createdWorkerProfile);
             }
 
             // invalidate token after use
@@ -428,6 +510,31 @@ namespace Infrastructure.Services.Auth
 
             var (refreshTokenPlain, _) = await IssueRefreshTokenAsync(user.Id, createdIp: null, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
+
+            if (createdWorkerProfile != null &&
+                registrationFiles is { Count: > 0 })
+            {
+                foreach (var file in registrationFiles)
+                {
+                    var relativePath = await _workerRegistrationFileStorage.SaveAsync(
+                        createdWorkerProfile.Id,
+                        file.OriginalFileName,
+                        file.Content,
+                        cancellationToken);
+
+                    _context.WorkerRegistrationDocuments.Add(new WorkerRegistrationDocument
+                    {
+                        WorkerProfileId = createdWorkerProfile.Id,
+                        DocumentType = file.DocumentType,
+                        OriginalFileName = file.OriginalFileName,
+                        StoredRelativePath = relativePath,
+                        ContentType = string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType,
+                        FileSizeBytes = file.Length
+                    });
+                }
+
+                await _context.SaveChangesAsync(cancellationToken);
+            }
 
             var accessToken = _jwtTokenService.CreateAccessToken(user, roleName, workerType, workerStatus);
 

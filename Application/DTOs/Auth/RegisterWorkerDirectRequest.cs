@@ -16,7 +16,7 @@ namespace Application.DTOs.Auth
         public string PhoneNumber { get; set; } = string.Empty;
 
         /// <summary>
-        /// Email (không bắt buộc).
+        /// Email (bắt buộc; phải trùng email đã xác thực OTP qua email).
         /// </summary>
         public string? Email { get; set; }
 
@@ -29,16 +29,6 @@ namespace Application.DTOs.Auth
         /// Họ và tên hiển thị.
         /// </summary>
         public string FullName { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Vĩ độ (Latitude).
-        /// </summary>
-        public decimal Latitude { get; set; }
-
-        /// <summary>
-        /// Kinh độ (Longitude).
-        /// </summary>
-        public decimal Longitude { get; set; }
     }
 }
 

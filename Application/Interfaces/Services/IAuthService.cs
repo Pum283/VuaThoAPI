@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Application.Common;
 using Application.DTOs.Auth;
 
@@ -12,8 +13,15 @@ namespace Application.Interfaces.Services
         Task<OperationResult<VerifyOtpResponse>> VerifyEmailOtpAsync(VerifyEmailOtpRequest request, CancellationToken cancellationToken = default);
 
         Task<OperationResult<AuthResponse>> RegisterCustomerAsync(RegisterCustomerRequest request, CancellationToken cancellationToken = default);
-        Task<OperationResult<AuthResponse>> RegisterWorkerExternalAsync(RegisterWorkerExternalRequest request, CancellationToken cancellationToken = default);
-        Task<OperationResult<AuthResponse>> RegisterWorkerDirectAsync(RegisterWorkerDirectRequest request, CancellationToken cancellationToken = default);
+        Task<OperationResult<AuthResponse>> RegisterWorkerExternalAsync(
+            RegisterWorkerExternalRequest request,
+            IReadOnlyList<WorkerRegistrationFileUpload> registrationFiles,
+            CancellationToken cancellationToken = default);
+
+        Task<OperationResult<AuthResponse>> RegisterWorkerDirectAsync(
+            RegisterWorkerDirectRequest request,
+            IReadOnlyList<WorkerRegistrationFileUpload> registrationFiles,
+            CancellationToken cancellationToken = default);
 
         Task<OperationResult<AuthResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default);
         Task<OperationResult<AuthResponse>> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default);

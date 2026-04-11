@@ -17,6 +17,12 @@ namespace Application.Validators.Auth
                 .MaximumLength(20)
                 .WithMessage("Số điện thoại không được vượt quá 20 ký tự.");
 
+            RuleFor(x => x.Email)
+                .NotEmpty()
+                .WithMessage("Email là bắt buộc (dùng để xác thực OTP khi đăng ký).")
+                .EmailAddress()
+                .WithMessage("Email không đúng định dạng.");
+
             RuleFor(x => x.FullName)
                 .NotEmpty()
                 .WithMessage("Họ và tên là bắt buộc.")
@@ -30,19 +36,6 @@ namespace Application.Validators.Auth
                 .WithMessage("Mật khẩu phải có ít nhất 8 ký tự.")
                 .MaximumLength(100)
                 .WithMessage("Mật khẩu không được vượt quá 100 ký tự.");
-
-            RuleFor(x => x.Email)
-                .EmailAddress()
-                .WithMessage("Email không đúng định dạng.")
-                .When(x => !string.IsNullOrWhiteSpace(x.Email));
-
-            RuleFor(x => x.Latitude)
-                .InclusiveBetween(-90, 90)
-                .WithMessage("Vĩ độ không hợp lệ.");
-
-            RuleFor(x => x.Longitude)
-                .InclusiveBetween(-180, 180)
-                .WithMessage("Kinh độ không hợp lệ.");
         }
     }
 }

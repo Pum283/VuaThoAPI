@@ -21,6 +21,7 @@ namespace Infrastructure.Persistence
         public DbSet<Review> Reviews => Set<Review>();
         public DbSet<OtpCode> OtpCodes => Set<OtpCode>();
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+        public DbSet<WorkerRegistrationDocument> WorkerRegistrationDocuments => Set<WorkerRegistrationDocument>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

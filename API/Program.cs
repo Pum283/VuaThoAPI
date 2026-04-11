@@ -1,3 +1,4 @@
+using API.Helpers;
 using Infrastructure.Persistence;
 using API.Middlewares;
 using Application;
@@ -12,6 +13,7 @@ using Microsoft.OpenApi.Models;
 using Serilog;
 using System.Reflection;
 using System.Text;
+using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -128,6 +130,11 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+builder.Services.Configure<FormOptions>(o =>
+{
+    o.MultipartBodyLengthLimit = 52_428_800; // ~50 MB tổng form đăng ký thợ + file
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
@@ -138,6 +145,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseStaticFiles();
 
 app.UseCors("DefaultCors");
 
@@ -243,39 +252,57 @@ authGroup.MapPost("/register/customer",
     .AllowAnonymous();
 
 authGroup.MapPost("/register/worker-external",
-        async (RegisterWorkerExternalRequest request, IValidator<RegisterWorkerExternalRequest> validator, IAuthService authService, CancellationToken ct) =>
+        async (HttpRequest httpRequest, IValidator<RegisterWorkerExternalRequest> validator, IAuthService authService, CancellationToken ct) =>
         {
+            if (!httpRequest.HasFormContentType)
+            {
+                return Results.BadRequest(new[] { "Yêu cầu gửi multipart/form-data (kèm file đăng ký)." });
+            }
+
+            var form = await httpRequest.ReadFormAsync(ct);
+            var request = WorkerRegistrationMultipartReader.ReadExternalFields(form);
             var validation = await validator.ValidateAsync(request, ct);
             if (!validation.IsValid)
             {
                 return Results.BadRequest(validation.Errors.Select(x => x.ErrorMessage).ToList());
             }
 
-            var result = await authService.RegisterWorkerExternalAsync(request, ct);
+            var files = WorkerRegistrationMultipartReader.ReadExternalFiles(form);
+            var result = await authService.RegisterWorkerExternalAsync(request, files, ct);
             return result.IsSuccess && result.Data != null
                 ? Results.Ok(result.Data)
                 : Results.BadRequest(result.Errors.Any() ? result.Errors : new[] { result.Message ?? "Đăng ký thất bại." });
         })
     .WithSummary("Đăng ký thợ ngoài")
-    .WithDescription("Đăng ký tài khoản thợ ngoài (WorkerProfile trạng thái Pending, chờ admin duyệt).")
+    .WithDescription("Đăng ký thợ ngoài (multipart): otpVerificationToken, phoneNumber, email, password, fullName; file: diploma (tuỳ chọn), identityCard (bắt buộc), otherDocuments (lặp lại, tuỳ chọn). PDF/JPG/PNG/WEBP, tối đa 10 MB/file.")
+    .DisableAntiforgery()
     .AllowAnonymous();
 
 authGroup.MapPost("/register/worker-direct",
-        async (RegisterWorkerDirectRequest request, IValidator<RegisterWorkerDirectRequest> validator, IAuthService authService, CancellationToken ct) =>
+        async (HttpRequest httpRequest, IValidator<RegisterWorkerDirectRequest> validator, IAuthService authService, CancellationToken ct) =>
         {
+            if (!httpRequest.HasFormContentType)
+            {
+                return Results.BadRequest(new[] { "Yêu cầu gửi multipart/form-data (kèm file đăng ký)." });
+            }
+
+            var form = await httpRequest.ReadFormAsync(ct);
+            var request = WorkerRegistrationMultipartReader.ReadDirectFields(form);
             var validation = await validator.ValidateAsync(request, ct);
             if (!validation.IsValid)
             {
                 return Results.BadRequest(validation.Errors.Select(x => x.ErrorMessage).ToList());
             }
 
-            var result = await authService.RegisterWorkerDirectAsync(request, ct);
+            var files = WorkerRegistrationMultipartReader.ReadDirectFiles(form);
+            var result = await authService.RegisterWorkerDirectAsync(request, files, ct);
             return result.IsSuccess && result.Data != null
                 ? Results.Ok(result.Data)
                 : Results.BadRequest(result.Errors.Any() ? result.Errors : new[] { result.Message ?? "Đăng ký thất bại." });
         })
     .WithSummary("Đăng ký thợ trực thuộc")
-    .WithDescription("Đăng ký tài khoản thợ trực thuộc (WorkerProfile trạng thái Inactive, chờ phỏng vấn offline).")
+    .WithDescription("Đăng ký thợ công ty (multipart): các field text như thợ ngoài; file cv (bắt buộc). PDF/JPG/PNG/WEBP, tối đa 10 MB.")
+    .DisableAntiforgery()
     .AllowAnonymous();
 
 authGroup.MapPost("/login",

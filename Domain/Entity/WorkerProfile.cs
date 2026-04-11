@@ -58,6 +58,11 @@ namespace Domain.Entity
         /// </summary>
         public ICollection<WorkerCategory> WorkerCategories { get; set; } = new List<WorkerCategory>();
 
+        /// <summary>
+        /// Tài liệu đăng ký (bằng cấp, CCCD, CV…).
+        /// </summary>
+        public ICollection<WorkerRegistrationDocument> RegistrationDocuments { get; set; } = new List<WorkerRegistrationDocument>();
+
         /// <inheritdoc />
         public bool IsDeleted { get; set; }
 

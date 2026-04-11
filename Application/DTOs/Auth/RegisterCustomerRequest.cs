@@ -16,7 +16,7 @@ namespace Application.DTOs.Auth
         public string PhoneNumber { get; set; } = string.Empty;
 
         /// <summary>
-        /// Email (không bắt buộc).
+        /// Email (bắt buộc; phải trùng email đã xác thực OTP qua email).
         /// </summary>
         public string? Email { get; set; }
 

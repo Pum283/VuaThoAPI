@@ -53,6 +53,7 @@ namespace Infrastructure
             services.AddScoped<IJwtTokenService, JwtTokenService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IWorkerRegistrationFileStorage, WorkerRegistrationFileStorage>();
 
             return services;
         }

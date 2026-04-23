@@ -11,7 +11,7 @@ namespace Domain.Entity
         /// <summary>
         /// Liên kết đến người dùng.
         /// </summary>
-        public int UserId { get; set; }
+        public Guid UserId { get; set; }
 
         /// <summary>
         /// Người dùng sở hữu hồ sơ thợ.
@@ -52,6 +52,21 @@ namespace Domain.Entity
         /// Giá cơ bản (nếu áp dụng).
         /// </summary>
         public decimal BasePrice { get; set; }
+
+        /// <summary>
+        /// Admin xử lý hồ sơ này (nếu đã xử lý).
+        /// </summary>
+        public Guid? ReviewedByUserId { get; set; }
+
+        /// <summary>
+        /// Thời điểm admin xử lý hồ sơ (UTC).
+        /// </summary>
+        public DateTime? ReviewedAtUtc { get; set; }
+
+        /// <summary>
+        /// Ghi chú xử lý từ admin.
+        /// </summary>
+        public string? ReviewNote { get; set; }
 
         /// <summary>
         /// Danh mục dịch vụ thợ có thể nhận.

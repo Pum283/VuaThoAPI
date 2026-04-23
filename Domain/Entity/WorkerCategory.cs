@@ -10,7 +10,7 @@ namespace Domain.Entity
         /// <summary>
         /// Khoá ngoại đến hồ sơ thợ.
         /// </summary>
-        public int WorkerProfileId { get; set; }
+        public Guid WorkerProfileId { get; set; }
 
         /// <summary>
         /// Hồ sơ thợ.
@@ -20,7 +20,7 @@ namespace Domain.Entity
         /// <summary>
         /// Khoá ngoại đến danh mục.
         /// </summary>
-        public int CategoryId { get; set; }
+        public Guid CategoryId { get; set; }
 
         /// <summary>
         /// Danh mục dịch vụ.

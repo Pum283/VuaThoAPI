@@ -28,6 +28,9 @@ namespace Infrastructure.Persistence.Configurations
             builder.Property(x => x.BasePrice)
                 .HasPrecision(18, 2);
 
+            builder.Property(x => x.ReviewNote)
+                .HasMaxLength(500);
+
             builder.HasMany(x => x.WorkerCategories)
                 .WithOne(x => x.WorkerProfile)
                 .HasForeignKey(x => x.WorkerProfileId)
@@ -37,6 +40,7 @@ namespace Infrastructure.Persistence.Configurations
             builder.HasIndex(x => x.RatingAvg);
             builder.HasIndex(x => x.WorkerStatus);
             builder.HasIndex(x => x.WorkerType);
+            builder.HasIndex(x => x.ReviewedByUserId);
         }
     }
 }

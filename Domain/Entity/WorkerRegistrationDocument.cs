@@ -8,7 +8,7 @@ namespace Domain.Entity;
 /// </summary>
 public class WorkerRegistrationDocument : BaseAuditableEntity, ISoftDelete
 {
-    public int WorkerProfileId { get; set; }
+    public Guid WorkerProfileId { get; set; }
 
     public WorkerProfile WorkerProfile { get; set; } = null!;
 
@@ -17,7 +17,7 @@ public class WorkerRegistrationDocument : BaseAuditableEntity, ISoftDelete
     /// <summary>Tên file gốc do người dùng chọn.</summary>
     public string OriginalFileName { get; set; } = string.Empty;
 
-    /// <summary>Đường dẫn lưu trữ tương đối (từ wwwroot), ví dụ: uploads/worker-registrations/1/xxx.pdf</summary>
+    /// <summary>Đường dẫn lưu trữ file (URL Azure Blob hoặc đường dẫn tương đối local).</summary>
     public string StoredRelativePath { get; set; } = string.Empty;
 
     public string ContentType { get; set; } = string.Empty;

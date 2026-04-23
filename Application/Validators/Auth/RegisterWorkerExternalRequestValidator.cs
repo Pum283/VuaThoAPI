@@ -36,6 +36,12 @@ namespace Application.Validators.Auth
                 .WithMessage("Mật khẩu phải có ít nhất 8 ký tự.")
                 .MaximumLength(100)
                 .WithMessage("Mật khẩu không được vượt quá 100 ký tự.");
+
+            RuleFor(x => x.CategoryIds)
+                .NotNull()
+                .WithMessage("Bạn cần chọn ít nhất 1 chuyên môn.")
+                .Must(list => list is { Count: > 0 })
+                .WithMessage("Bạn cần chọn ít nhất 1 chuyên môn.");
         }
     }
 }

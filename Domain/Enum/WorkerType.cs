@@ -11,7 +11,7 @@ namespace Domain.Enum
         Direct = 1,
 
         /// <summary>
-        /// Thợ ngoài (đăng ký và cần kiểm duyệt).
+        /// Thợ (đăng ký và cần kiểm duyệt).
         /// </summary>
         External = 2
     }

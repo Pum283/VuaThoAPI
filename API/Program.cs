@@ -2,18 +2,25 @@ using API.Helpers;
 using Infrastructure.Persistence;
 using API.Middlewares;
 using Application;
+using Application.Constants;
 using Infrastructure;
 using Application.DTOs.Auth;
+using Application.DTOs.Category;
 using Application.Interfaces.Services;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using System.Reflection;
 using System.Text;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Identity;
+using Domain.Enum;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -157,6 +164,30 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
+// Minimal APIs - Categories (v1)
+var categoriesGroup = app.MapGroup("/api/v1/categories")
+    .WithTags("Danh mục");
+
+categoriesGroup.MapGet("",
+        async (AppDbContext db, CancellationToken ct) =>
+        {
+            var data = await db.Categories
+                .AsNoTracking()
+                .OrderBy(x => x.Name)
+                .Select(x => new CategoryDto
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    Description = x.Description,
+                })
+                .ToListAsync(ct);
+
+            return Results.Ok(data);
+        })
+    .WithSummary("Lấy danh sách chuyên môn")
+    .WithDescription("Trả về danh sách chuyên môn (Category) để người dùng chọn khi đăng ký thợ.")
+    .AllowAnonymous();
+
 // Minimal APIs - Auth (v1)
 var authGroup = app.MapGroup("/api/v1/auth")
     .WithTags("Xác thực");
@@ -273,35 +304,8 @@ authGroup.MapPost("/register/worker-external",
                 ? Results.Ok(result.Data)
                 : Results.BadRequest(result.Errors.Any() ? result.Errors : new[] { result.Message ?? "Đăng ký thất bại." });
         })
-    .WithSummary("Đăng ký thợ ngoài")
-    .WithDescription("Đăng ký thợ ngoài (multipart): otpVerificationToken, phoneNumber, email, password, fullName; file: diploma (tuỳ chọn), identityCard (bắt buộc), otherDocuments (lặp lại, tuỳ chọn). PDF/JPG/PNG/WEBP, tối đa 10 MB/file.")
-    .DisableAntiforgery()
-    .AllowAnonymous();
-
-authGroup.MapPost("/register/worker-direct",
-        async (HttpRequest httpRequest, IValidator<RegisterWorkerDirectRequest> validator, IAuthService authService, CancellationToken ct) =>
-        {
-            if (!httpRequest.HasFormContentType)
-            {
-                return Results.BadRequest(new[] { "Yêu cầu gửi multipart/form-data (kèm file đăng ký)." });
-            }
-
-            var form = await httpRequest.ReadFormAsync(ct);
-            var request = WorkerRegistrationMultipartReader.ReadDirectFields(form);
-            var validation = await validator.ValidateAsync(request, ct);
-            if (!validation.IsValid)
-            {
-                return Results.BadRequest(validation.Errors.Select(x => x.ErrorMessage).ToList());
-            }
-
-            var files = WorkerRegistrationMultipartReader.ReadDirectFiles(form);
-            var result = await authService.RegisterWorkerDirectAsync(request, files, ct);
-            return result.IsSuccess && result.Data != null
-                ? Results.Ok(result.Data)
-                : Results.BadRequest(result.Errors.Any() ? result.Errors : new[] { result.Message ?? "Đăng ký thất bại." });
-        })
-    .WithSummary("Đăng ký thợ trực thuộc")
-    .WithDescription("Đăng ký thợ công ty (multipart): các field text như thợ ngoài; file cv (bắt buộc). PDF/JPG/PNG/WEBP, tối đa 10 MB.")
+    .WithSummary("Đăng ký thợ")
+    .WithDescription("Đăng ký thợ (multipart): otpVerificationToken, phoneNumber, email, password, fullName; file: diploma (tuỳ chọn), identityCard (bắt buộc), otherDocuments (lặp lại, tuỳ chọn). PDF/JPG/PNG/WEBP, tối đa 10 MB/file.")
     .DisableAntiforgery()
     .AllowAnonymous();
 
@@ -345,6 +349,8 @@ authGroup.MapPost("/refresh-token",
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     try
     {
         if (context.Database.IsInMemory())
@@ -355,12 +361,35 @@ using (var scope = app.Services.CreateScope())
         {
             context.Database.Migrate();
         }
+
+        var defaultRoles = new[]
+        {
+            RoleNames.Customer,
+            RoleNames.WorkerExternal,
+            RoleNames.Admin
+        };
+
+        foreach (var roleName in defaultRoles)
+        {
+            if (await roleManager.RoleExistsAsync(roleName))
+            {
+                continue;
+            }
+
+            var createRoleResult = await roleManager.CreateAsync(new IdentityRole<Guid>(roleName));
+            if (!createRoleResult.Succeeded)
+            {
+                var roleErrors = string.Join("; ", createRoleResult.Errors.Select(x => x.Description));
+                logger.LogError("Không thể tạo role mặc định {RoleName}. Chi tiết: {Errors}", roleName, roleErrors);
+            }
+        }
     }
     catch (Exception ex)
     {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "Đã xảy ra lỗi khi khởi tạo cơ sở dữ liệu.");
     }
 }
 
 app.Run();
+
+// intentionally left without additional local helpers

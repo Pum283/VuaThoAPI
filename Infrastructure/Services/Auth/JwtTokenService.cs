@@ -38,9 +38,17 @@ namespace Infrastructure.Services.Auth
             var claims = new List<Claim>
             {
                 new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
                 new("role", role),
+                new(ClaimTypes.Role, role),
             };
+
+            if (!string.IsNullOrWhiteSpace(user.FullName))
+            {
+                claims.Add(new("fullName", user.FullName));
+                claims.Add(new(ClaimTypes.Name, user.FullName));
+            }
 
             if (!string.IsNullOrWhiteSpace(user.PhoneNumber))
             {

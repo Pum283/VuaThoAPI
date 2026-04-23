@@ -38,7 +38,7 @@ namespace Infrastructure
                     options.Password.RequireNonAlphanumeric = false;
                     options.Password.RequiredLength = 8;
                 })
-                .AddRoles<IdentityRole<int>>()
+                .AddRoles<IdentityRole<Guid>>()
                 .AddEntityFrameworkStores<AppDbContext>()
                 .AddSignInManager();
 

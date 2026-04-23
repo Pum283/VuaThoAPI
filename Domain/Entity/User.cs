@@ -6,7 +6,7 @@ namespace Domain.Entity
     /// <summary>
     /// Người dùng trong hệ thống (lớp nền tảng).
     /// </summary>
-    public class User : IdentityUser<int>, IAuditableEntity, ISoftDelete
+    public class User : IdentityUser<Guid>, IAuditableEntity, ISoftDelete
     {
         /// <summary>
         /// Họ và tên hiển thị.

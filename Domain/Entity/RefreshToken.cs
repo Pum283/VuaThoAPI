@@ -10,7 +10,7 @@ namespace Domain.Entity
         /// <summary>
         /// Định danh người dùng sở hữu refresh token.
         /// </summary>
-        public int UserId { get; set; }
+        public Guid UserId { get; set; }
 
         /// <summary>
         /// Hash của refresh token (không lưu token plain text).

@@ -20,7 +20,7 @@ namespace Infrastructure.Services.Auth
 
         private readonly AppDbContext _context;
         private readonly UserManager<User> _userManager;
-        private readonly RoleManager<IdentityRole<int>> _roleManager;
+        private readonly RoleManager<IdentityRole<Guid>> _roleManager;
         private readonly IJwtTokenService _jwtTokenService;
         private readonly IEmailService _emailService;
         private readonly IWorkerRegistrationFileStorage _workerRegistrationFileStorage;
@@ -28,7 +28,7 @@ namespace Infrastructure.Services.Auth
         public AuthService(
             AppDbContext context,
             UserManager<User> userManager,
-            RoleManager<IdentityRole<int>> roleManager,
+            RoleManager<IdentityRole<Guid>> roleManager,
             IEmailService emailService,
             IJwtTokenService jwtTokenService,
             IWorkerRegistrationFileStorage workerRegistrationFileStorage)
@@ -44,6 +44,11 @@ namespace Infrastructure.Services.Auth
         public async Task<OperationResult> SendOtpAsync(SendOtpRequest request, CancellationToken cancellationToken = default)
         {
             var phoneNumber = request.PhoneNumber.Trim();
+            var existedPhone = await _userManager.Users.AnyAsync(x => x.PhoneNumber == phoneNumber, cancellationToken);
+            if (existedPhone)
+            {
+                return OperationResult.Failure("Số điện thoại đã tồn tại trong hệ thống. Vui lòng dùng số khác hoặc đăng nhập.");
+            }
 
             // OTP demo: generate 6 digits. Thực tế: tích hợp SMS provider.
             var otp = Random.Shared.Next(100000, 999999).ToString();
@@ -69,6 +74,11 @@ namespace Infrastructure.Services.Auth
         public async Task<OperationResult> SendEmailOtpAsync(SendEmailOtpRequest request, CancellationToken cancellationToken = default)
         {
             var email = request.Email.Trim();
+            var existedEmail = await _userManager.Users.AnyAsync(x => x.Email != null && x.Email == email, cancellationToken);
+            if (existedEmail)
+            {
+                return OperationResult.Failure("Email đã tồn tại trong hệ thống. Vui lòng dùng email khác hoặc đăng nhập.");
+            }
 
             var otp = Random.Shared.Next(100000, 999999).ToString();
             var (hash, salt) = CryptoHelper.HashWithRandomSalt(otp);
@@ -215,6 +225,7 @@ namespace Infrastructure.Services.Auth
                 latitude: null,
                 longitude: null,
                 registrationFiles: null,
+                categoryIds: null,
                 cancellationToken: cancellationToken);
         }
 
@@ -233,6 +244,23 @@ namespace Infrastructure.Services.Auth
                     return OperationResult<AuthResponse>.Failure(docErrors.ToList());
                 }
 
+                var categoryIds = (request.CategoryIds ?? Array.Empty<Guid>()).Distinct().ToList();
+                if (categoryIds.Count == 0)
+                {
+                    return OperationResult<AuthResponse>.Failure("Bạn cần chọn ít nhất 1 chuyên môn.");
+                }
+
+                var existingCategoryCount = await _context.Categories
+                    .Where(x => categoryIds.Contains(x.Id) && !x.IsDeleted)
+                    .Select(x => x.Id)
+                    .Distinct()
+                    .CountAsync(cancellationToken);
+
+                if (existingCategoryCount != categoryIds.Count)
+                {
+                    return OperationResult<AuthResponse>.Failure("Chuyên môn không hợp lệ hoặc đã bị xoá. Vui lòng tải lại danh sách.");
+                }
+
                 return await RegisterInternalAsync(
                     roleName: RoleNames.WorkerExternal,
                     workerType: WorkerType.External,
@@ -245,44 +273,7 @@ namespace Infrastructure.Services.Auth
                     latitude: null,
                     longitude: null,
                     registrationFiles: fileList,
-                    cancellationToken: cancellationToken);
-            }
-            finally
-            {
-                foreach (var f in fileList)
-                {
-                    await f.Content.DisposeAsync();
-                }
-            }
-        }
-
-        public async Task<OperationResult<AuthResponse>> RegisterWorkerDirectAsync(
-            RegisterWorkerDirectRequest request,
-            IReadOnlyList<WorkerRegistrationFileUpload> registrationFiles,
-            CancellationToken cancellationToken = default)
-        {
-            var files = registrationFiles ?? Array.Empty<WorkerRegistrationFileUpload>();
-            var fileList = files.ToList();
-            try
-            {
-                var docErrors = WorkerRegistrationFileRules.ValidateRequiredDocumentsForDirect(fileList);
-                if (docErrors.Count > 0)
-                {
-                    return OperationResult<AuthResponse>.Failure(docErrors.ToList());
-                }
-
-                return await RegisterInternalAsync(
-                    roleName: RoleNames.WorkerDirect,
-                    workerType: WorkerType.Direct,
-                    workerStatus: WorkerStatus.Inactive,
-                    phoneNumber: request.PhoneNumber,
-                    email: request.Email,
-                    fullName: request.FullName,
-                    password: request.Password,
-                    otpVerificationToken: request.OtpVerificationToken,
-                    latitude: null,
-                    longitude: null,
-                    registrationFiles: fileList,
+                    categoryIds: categoryIds,
                     cancellationToken: cancellationToken);
             }
             finally
@@ -407,6 +398,7 @@ namespace Infrastructure.Services.Auth
             decimal? latitude,
             decimal? longitude,
             IReadOnlyList<WorkerRegistrationFileUpload>? registrationFiles,
+            IReadOnlyList<Guid>? categoryIds,
             CancellationToken cancellationToken)
         {
             var phone = phoneNumber.Trim();
@@ -512,6 +504,21 @@ namespace Infrastructure.Services.Auth
             await _context.SaveChangesAsync(cancellationToken);
 
             if (createdWorkerProfile != null &&
+                categoryIds is { Count: > 0 })
+            {
+                foreach (var categoryId in categoryIds.Distinct())
+                {
+                    _context.WorkerCategories.Add(new WorkerCategory
+                    {
+                        WorkerProfileId = createdWorkerProfile.Id,
+                        CategoryId = categoryId,
+                    });
+                }
+
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+
+            if (createdWorkerProfile != null &&
                 registrationFiles is { Count: > 0 })
             {
                 foreach (var file in registrationFiles)
@@ -594,7 +601,7 @@ namespace Infrastructure.Services.Auth
                 return;
             }
 
-            var result = await _roleManager.CreateAsync(new IdentityRole<int>(roleName));
+            var result = await _roleManager.CreateAsync(new IdentityRole<Guid>(roleName));
             if (!result.Succeeded)
             {
                 throw new InvalidOperationException("Không thể khởi tạo role hệ thống. Vui lòng thử lại.");
@@ -602,7 +609,7 @@ namespace Infrastructure.Services.Auth
         }
 
         private async Task<(string refreshTokenPlain, RefreshToken refreshTokenEntity)> IssueRefreshTokenAsync(
-            int userId,
+            Guid userId,
             string? createdIp,
             CancellationToken cancellationToken)
         {

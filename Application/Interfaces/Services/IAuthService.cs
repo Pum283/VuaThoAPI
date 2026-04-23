@@ -18,11 +18,6 @@ namespace Application.Interfaces.Services
             IReadOnlyList<WorkerRegistrationFileUpload> registrationFiles,
             CancellationToken cancellationToken = default);
 
-        Task<OperationResult<AuthResponse>> RegisterWorkerDirectAsync(
-            RegisterWorkerDirectRequest request,
-            IReadOnlyList<WorkerRegistrationFileUpload> registrationFiles,
-            CancellationToken cancellationToken = default);
-
         Task<OperationResult<AuthResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default);
         Task<OperationResult<AuthResponse>> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default);
     }

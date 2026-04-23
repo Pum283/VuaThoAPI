@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class Init_Identity_Auth : Migration
+    public partial class InitAuthOnly : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,8 +15,7 @@ namespace Infrastructure.Persistence.Migrations
                 name: "AspNetRoles",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true)
@@ -30,8 +29,7 @@ namespace Infrastructure.Persistence.Migrations
                 name: "Categories",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
@@ -51,8 +49,7 @@ namespace Infrastructure.Persistence.Migrations
                 name: "OtpCodes",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     CodeHash = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
@@ -80,9 +77,8 @@ namespace Infrastructure.Persistence.Migrations
                 name: "RefreshTokens",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<int>(type: "int", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     TokenHash = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     Salt = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     ExpiresAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -107,8 +103,7 @@ namespace Infrastructure.Persistence.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FullName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -144,7 +139,7 @@ namespace Infrastructure.Persistence.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    RoleId = table.Column<int>(type: "int", nullable: false),
+                    RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
@@ -165,7 +160,7 @@ namespace Infrastructure.Persistence.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
@@ -187,7 +182,7 @@ namespace Infrastructure.Persistence.Migrations
                     LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     ProviderKey = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     ProviderDisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UserId = table.Column<int>(type: "int", nullable: false)
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -204,8 +199,8 @@ namespace Infrastructure.Persistence.Migrations
                 name: "AspNetUserRoles",
                 columns: table => new
                 {
-                    UserId = table.Column<int>(type: "int", nullable: false),
-                    RoleId = table.Column<int>(type: "int", nullable: false)
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -228,7 +223,7 @@ namespace Infrastructure.Persistence.Migrations
                 name: "AspNetUserTokens",
                 columns: table => new
                 {
-                    UserId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Value = table.Column<string>(type: "nvarchar(max)", nullable: true)
@@ -248,9 +243,8 @@ namespace Infrastructure.Persistence.Migrations
                 name: "WorkerProfiles",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<int>(type: "int", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     WorkerType = table.Column<int>(type: "int", nullable: false),
                     WorkerStatus = table.Column<int>(type: "int", nullable: false),
                     Latitude = table.Column<decimal>(type: "decimal(9,6)", precision: 9, scale: 6, nullable: false),
@@ -258,6 +252,9 @@ namespace Infrastructure.Persistence.Migrations
                     RatingAvg = table.Column<decimal>(type: "decimal(3,2)", precision: 3, scale: 2, nullable: false),
                     RatingCount = table.Column<int>(type: "int", nullable: false),
                     BasePrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    ReviewedByUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    ReviewedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ReviewNote = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     DeletedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -278,51 +275,12 @@ namespace Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Bookings",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CustomerId = table.Column<int>(type: "int", nullable: false),
-                    WorkerProfileId = table.Column<int>(type: "int", nullable: true),
-                    BookingStatus = table.Column<int>(type: "int", nullable: false),
-                    ScheduledAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Address = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    Notes = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
-                    EstimatedTotalAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    DeletedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Bookings", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Bookings_Users_CustomerId",
-                        column: x => x.CustomerId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Bookings_WorkerProfiles_WorkerProfileId",
-                        column: x => x.WorkerProfileId,
-                        principalTable: "WorkerProfiles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "WorkerCategories",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    WorkerProfileId = table.Column<int>(type: "int", nullable: false),
-                    CategoryId = table.Column<int>(type: "int", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    WorkerProfileId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CategoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     DeletedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -347,17 +305,16 @@ namespace Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Payments",
+                name: "WorkerRegistrationDocuments",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    BookingId = table.Column<int>(type: "int", nullable: false),
-                    Amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    CompanyFeeAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    WorkerPayoutAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    PaymentStatus = table.Column<int>(type: "int", nullable: false),
-                    PaidAtUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    WorkerProfileId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DocumentType = table.Column<int>(type: "int", nullable: false),
+                    OriginalFileName = table.Column<string>(type: "nvarchar(260)", maxLength: 260, nullable: false),
+                    StoredRelativePath = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    ContentType = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
+                    FileSizeBytes = table.Column<long>(type: "bigint", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     DeletedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -368,39 +325,11 @@ namespace Infrastructure.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Payments", x => x.Id);
+                    table.PrimaryKey("PK_WorkerRegistrationDocuments", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Payments_Bookings_BookingId",
-                        column: x => x.BookingId,
-                        principalTable: "Bookings",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Reviews",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    BookingId = table.Column<int>(type: "int", nullable: false),
-                    Rating = table.Column<int>(type: "int", nullable: false),
-                    Comment = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    DeletedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Reviews", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Reviews_Bookings_BookingId",
-                        column: x => x.BookingId,
-                        principalTable: "Bookings",
+                        name: "FK_WorkerRegistrationDocuments_WorkerProfiles_WorkerProfileId",
+                        column: x => x.WorkerProfileId,
+                        principalTable: "WorkerProfiles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -433,26 +362,6 @@ namespace Infrastructure.Persistence.Migrations
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Bookings_BookingStatus",
-                table: "Bookings",
-                column: "BookingStatus");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Bookings_CustomerId",
-                table: "Bookings",
-                column: "CustomerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Bookings_ScheduledAtUtc",
-                table: "Bookings",
-                column: "ScheduledAtUtc");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Bookings_WorkerProfileId",
-                table: "Bookings",
-                column: "WorkerProfileId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Categories_Name",
                 table: "Categories",
                 column: "Name",
@@ -474,22 +383,6 @@ namespace Infrastructure.Persistence.Migrations
                 column: "VerificationToken");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Payments_BookingId",
-                table: "Payments",
-                column: "BookingId",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Payments_PaidAtUtc",
-                table: "Payments",
-                column: "PaidAtUtc");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Payments_PaymentStatus",
-                table: "Payments",
-                column: "PaymentStatus");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_RefreshTokens_ExpiresAtUtc",
                 table: "RefreshTokens",
                 column: "ExpiresAtUtc");
@@ -498,12 +391,6 @@ namespace Infrastructure.Persistence.Migrations
                 name: "IX_RefreshTokens_UserId",
                 table: "RefreshTokens",
                 column: "UserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Reviews_BookingId",
-                table: "Reviews",
-                column: "BookingId",
-                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "EmailIndex",
@@ -550,6 +437,11 @@ namespace Infrastructure.Persistence.Migrations
                 column: "RatingAvg");
 
             migrationBuilder.CreateIndex(
+                name: "IX_WorkerProfiles_ReviewedByUserId",
+                table: "WorkerProfiles",
+                column: "ReviewedByUserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_WorkerProfiles_UserId",
                 table: "WorkerProfiles",
                 column: "UserId",
@@ -564,6 +456,11 @@ namespace Infrastructure.Persistence.Migrations
                 name: "IX_WorkerProfiles_WorkerType",
                 table: "WorkerProfiles",
                 column: "WorkerType");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WorkerRegistrationDocuments_WorkerProfileId",
+                table: "WorkerRegistrationDocuments",
+                column: "WorkerProfileId");
         }
 
         /// <inheritdoc />
@@ -588,22 +485,16 @@ namespace Infrastructure.Persistence.Migrations
                 name: "OtpCodes");
 
             migrationBuilder.DropTable(
-                name: "Payments");
-
-            migrationBuilder.DropTable(
                 name: "RefreshTokens");
-
-            migrationBuilder.DropTable(
-                name: "Reviews");
 
             migrationBuilder.DropTable(
                 name: "WorkerCategories");
 
             migrationBuilder.DropTable(
-                name: "AspNetRoles");
+                name: "WorkerRegistrationDocuments");
 
             migrationBuilder.DropTable(
-                name: "Bookings");
+                name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "Categories");

@@ -1,7 +1,7 @@
 namespace Application.DTOs.Auth
 {
     /// <summary>
-    /// Đăng ký tài khoản thợ ngoài (cần admin duyệt hồ sơ).
+    /// Đăng ký tài khoản thợ (cần admin duyệt hồ sơ).
     /// </summary>
     public class RegisterWorkerExternalRequest
     {
@@ -29,6 +29,11 @@ namespace Application.DTOs.Auth
         /// Họ và tên hiển thị.
         /// </summary>
         public string FullName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Danh sách chuyên môn (danh mục) mà thợ đăng ký (chọn 1 hoặc nhiều).
+        /// </summary>
+        public IReadOnlyList<Guid> CategoryIds { get; set; } = new List<Guid>();
     }
 }
 

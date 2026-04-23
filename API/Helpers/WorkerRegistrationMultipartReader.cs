@@ -7,6 +7,15 @@ internal static class WorkerRegistrationMultipartReader
 {
     public static RegisterWorkerExternalRequest ReadExternalFields(IFormCollection form)
     {
+        var categoryIds = form["categoryIds"]
+            .Select(raw => raw?.Trim())
+            .Where(raw => !string.IsNullOrWhiteSpace(raw))
+            .Select(raw => Guid.TryParse(raw, out var id) ? (Guid?)id : null)
+            .Where(x => x.HasValue)
+            .Select(x => x!.Value)
+            .Distinct()
+            .ToList();
+
         return new RegisterWorkerExternalRequest
         {
             OtpVerificationToken = form["otpVerificationToken"].ToString(),
@@ -14,18 +23,7 @@ internal static class WorkerRegistrationMultipartReader
             Email = form["email"].ToString(),
             Password = form["password"].ToString(),
             FullName = form["fullName"].ToString(),
-        };
-    }
-
-    public static RegisterWorkerDirectRequest ReadDirectFields(IFormCollection form)
-    {
-        return new RegisterWorkerDirectRequest
-        {
-            OtpVerificationToken = form["otpVerificationToken"].ToString(),
-            PhoneNumber = form["phoneNumber"].ToString(),
-            Email = form["email"].ToString(),
-            Password = form["password"].ToString(),
-            FullName = form["fullName"].ToString(),
+            CategoryIds = categoryIds,
         };
     }
 
@@ -47,13 +45,6 @@ internal static class WorkerRegistrationMultipartReader
             list.Add(CreateUpload(file, WorkerRegistrationDocumentType.Other));
         }
 
-        return list;
-    }
-
-    public static IReadOnlyList<WorkerRegistrationFileUpload> ReadDirectFiles(IFormCollection form)
-    {
-        var list = new List<WorkerRegistrationFileUpload>();
-        AddOptional(form, "cv", WorkerRegistrationDocumentType.CurriculumVitae, list);
         return list;
     }
 

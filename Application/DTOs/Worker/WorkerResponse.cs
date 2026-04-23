@@ -10,12 +10,12 @@ namespace Application.DTOs.Worker
         /// <summary>
         /// Định danh hồ sơ thợ.
         /// </summary>
-        public int WorkerProfileId { get; set; }
+        public Guid WorkerProfileId { get; set; }
 
         /// <summary>
         /// Định danh người dùng.
         /// </summary>
-        public int UserId { get; set; }
+        public Guid UserId { get; set; }
 
         /// <summary>
         /// Họ và tên hiển thị.

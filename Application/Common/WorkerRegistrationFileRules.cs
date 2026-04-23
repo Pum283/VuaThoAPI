@@ -57,23 +57,7 @@ public static class WorkerRegistrationFileRules
 
         if (!files.Any(x => x.DocumentType == WorkerRegistrationDocumentType.IdentityCard))
         {
-            return new List<string> { "Thợ ngoài bắt buộc đính kèm file CCCD / giấy tờ định danh." };
-        }
-
-        return new List<string>();
-    }
-
-    public static IReadOnlyList<string> ValidateRequiredDocumentsForDirect(IReadOnlyList<WorkerRegistrationFileUpload> files)
-    {
-        var baseErrors = ValidateFiles(files);
-        if (baseErrors.Count > 0)
-        {
-            return baseErrors;
-        }
-
-        if (!files.Any(x => x.DocumentType == WorkerRegistrationDocumentType.CurriculumVitae))
-        {
-            return new List<string> { "Thợ công ty bắt buộc đính kèm file CV." };
+            return new List<string> { "Thợ bắt buộc đính kèm file CCCD / giấy tờ định danh." };
         }
 
         return new List<string>();

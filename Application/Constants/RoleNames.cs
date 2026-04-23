@@ -7,7 +7,6 @@ namespace Application.Constants
     {
         public const string Customer = "Customer";
         public const string WorkerExternal = "WorkerExternal";
-        public const string WorkerDirect = "WorkerDirect";
         public const string Admin = "Admin";
     }
 }

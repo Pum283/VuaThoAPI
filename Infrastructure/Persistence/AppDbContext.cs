@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence
 {
-    public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
+    public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
@@ -16,9 +16,6 @@ namespace Infrastructure.Persistence
         public DbSet<WorkerProfile> WorkerProfiles => Set<WorkerProfile>();
         public DbSet<Category> Categories => Set<Category>();
         public DbSet<WorkerCategory> WorkerCategories => Set<WorkerCategory>();
-        public DbSet<Booking> Bookings => Set<Booking>();
-        public DbSet<Payment> Payments => Set<Payment>();
-        public DbSet<Review> Reviews => Set<Review>();
         public DbSet<OtpCode> OtpCodes => Set<OtpCode>();
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
         public DbSet<WorkerRegistrationDocument> WorkerRegistrationDocuments => Set<WorkerRegistrationDocument>();

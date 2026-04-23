@@ -8,7 +8,7 @@ namespace Application.DTOs.User
         /// <summary>
         /// Định danh người dùng.
         /// </summary>
-        public int UserId { get; set; }
+        public Guid UserId { get; set; }
 
         /// <summary>
         /// Số điện thoại.
